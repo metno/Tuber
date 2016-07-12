@@ -2,5 +2,15 @@
 # -*- coding: utf-8 -*-
 #
 
+class TuberException(Exception):
+    pass
+
+class TuberParseError(TuberException):
+    pass
+
+class TuberIncompleteMessage(TuberException):
+    pass
+
 from .BaseAdapter import BaseAdapter
 from .TCPAdapter import TCPAdapter
+from .WMOBulletin import findAHL

@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 #
 
-from .BaseAdapter import BaseAdapter
+from Tuber.BaseAdapter import BaseAdapter
+from Tuber import TuberParseError, TuberIncompleteMessage
 
 import socket
 import sys
@@ -16,32 +17,27 @@ class TCPAdapter(BaseAdapter):
     Adapter for communicating with GTS TCP sockets
     """
 
+    re_message_start = re.compile(rb'^\x01\r\r\n(?P<csn>\d{0,5})\r\r\n')
+    re_message_end = re.compile(rb'\r\r\n\x03$')
+
+
     def __init__(self, direction, host, port):
         super().__init__(direction)
         self.host = host
         self.port = port
 
+        self.csn_digits = 3
+
         self._socket = None
         self._buffer = b''
         self._csn = 0
 
-        self.csn_digits = 3
-
-        if self.direction == 'input':
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.bind((self.host, self.port))
-            s.listen(0)
-            sys.stderr.write('Waiting for connection\n')
-            self._socket, address = s.accept()
-            sys.stderr.write('Connection accepted from {}\n'.format(address))
-        else:
-            self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sys.stderr.write('Connecting to {}:{}\n'.format(self.host, self.port))
-            self._socket.connect((self.host, self.port))
+        self._connect()
 
     def receive(self):
         while True:
             chunk = self._socket.recv(4096)
+            print('received: {}'.format(chunk))
             if len(chunk) == 0:
                 sys.stderr.write('Remote host closed the connection\n')
 
@@ -52,7 +48,7 @@ class TCPAdapter(BaseAdapter):
             try:
                 msg = self._parse_message()
                 return msg
-            except IndexError: #rased when we do not have a complete message in the buffer 
+            except TuberIncompleteMessage: #raised when we do not have a complete message in the buffer
                 pass
             except Exception as e:
                 sys.stderr.write('Error parsing message: {}\n'.format(e))
@@ -60,9 +56,10 @@ class TCPAdapter(BaseAdapter):
     def send(self, message):
         message = bytes(message)
         csn = bytes(str(self._csn).zfill(self.csn_digits), 'ascii')
-        encoded_msg = b'\x01\r\r\n' + csn + b'\r\r\n' + message + b'\r\r\n\x03'
-        length = bytes(str(len(encoded_msg)).zfill(8), 'ascii')
 
+        encoded_msg = b'\x01\r\r\n' + csn + b'\r\r\n' + message + b'\r\r\n\x03'
+
+        length = bytes(str(len(encoded_msg)).zfill(8), 'ascii')
         encoded_msg = length + b'BI' + encoded_msg
 
         total_sent = 0
@@ -72,7 +69,28 @@ class TCPAdapter(BaseAdapter):
                 raise ConnectionError('Error writing to socket')
             total_sent = total_sent + sent
 
+        print('sent: {}'.format(encoded_msg))
+
         self._csn = self._csn + 1 % pow(10, self.csn_digits)
+
+    def _connect(self):
+        while True:
+            try:
+                if self.direction == 'input':
+                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    s.bind((self.host, self.port))
+                    s.listen(0)
+                    sys.stderr.write('Waiting for connection\n')
+                    self._socket, address = s.accept()
+                    sys.stderr.write('Connection accepted from {}\n'.format(address))
+                else:
+                    self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    sys.stderr.write('Connecting to {}:{}\n'.format(self.host, self.port))
+                    self._socket.connect((self.host, self.port))
+                break
+            except (OSError, ConnectionRefusedError) as e:
+                    sys.stderr.write('{}. Retrying in 10 seconds\n'.format(e))
+                    time.sleep(10)
 
 
     def _parse_message(self):
@@ -90,50 +108,35 @@ class TCPAdapter(BaseAdapter):
 
         pos = 0 # our current position in the buffer
 
+        length = self._buffer[:8]
+        pos = 8
         try:
-            length = self._buffer[:8]
-            pos = 8
-            try:
-                length = int(length)
-            except ValueError:
-                raise ValueError('Invalid message length {}'.format(length))
+            length = int(length)
+        except ValueError:
+            raise TuberParseError('Invalid message length {}'.format(length))
 
-            raw_msg = self._buffer[:length + 10] # length and type fields takes 10 bytes
-            if len(raw_msg) < length + 10:
-                raise IndexError('Message not complete')
+        raw_msg = self._buffer[:length + 10] # length and type fields takes 10 bytes
+        if len(raw_msg) < length + 10:
+            raise TuberIncompleteMessage('Message not complete')
 
-            msg_type = raw_msg[pos:pos + 2]
-            if msg_type not in [b'BI', b'AB', b'FX']:
-                raise ValueError('Ivalid message type {}'.format(msg_type))
+        msg_type = raw_msg[pos:pos + 2]
+        if msg_type not in [b'BI', b'AB', b'FX']:
+            raise TuberParseError('Ivalid message type {}'.format(msg_type))
+        pos = pos + 2
 
-            pos = pos + 2
-            msg_start = raw_msg[pos:pos + 4] # should be SOH (\x01) \r \r \n
-            if not msg_start == b'\x01\r\r\n':
-                raise ValueError('Message start not found (found {})'.format(msg_start))
+        start_match = self.re_message_start.match(raw_msg[pos:])
+        if not start_match:
+            raise TuberParseError('Message start not found (found {})'.format(raw_msg[pos:pos + 20]))
 
-            pos = pos + 4
-            # This should be {3,5}, but norcom does not seem to use CSNs
-            csn_match = re.match(rb'\d{0,5}\r\r\n', raw_msg[pos:pos + 8])
-            if not csn_match:
-                raise ValueError('CSN not found (found {})'.format(raw_msg[pos:pos + 8]))
+        if start_match.group('csn'):
+            self._csn = int(start_match.group('csn'))
+        pos = pos + start_match.end(0)
+        start_pos = pos
 
-            start_pos = pos + csn_match.end(0)
-            end_pos = len(raw_msg) - 4
-
-            pos = end_pos
-            msg_end = raw_msg[pos:pos + 4] # should be \r \r \n ETX (\x03)
-            if not msg_end == b'\r\r\n\x03':
-                raise ValueError('Message end not found (found {})'.format(msg_end))
-
-
-        except ValueError as e: # something went wrong when parsing the message, discard it
-            sys.stderr.write('Error parsing message: {}\n'.format(e))
-            next_message = re.search(br'\d{8}[A-Z]{2}\d{0,5}\x01\r\r\n', buffer[pos:])
-            if next_message: # move to the next message if there is one
-                self._buffer = self._buffer[next_message.start(0):]
-            else: # no more messages, clear the buffer
-                self._buffer = b''
-            raise
+        end_match = self.re_message_end.search(raw_msg[pos:])
+        if not end_match:
+            raise TuberParseError('Message end not found (found {})'.format(raw_msg[-20:]))
+        end_pos = pos + end_match.start(0)
 
         msg = raw_msg[start_pos:end_pos]
         self._buffer = self._buffer[len(raw_msg):]
