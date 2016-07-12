@@ -12,6 +12,9 @@ def makeAdapter(url, direction):
 
     if split.scheme == 'gts':
         return Tuber.TCPAdapter(direction, split.hostname, split.port)
+    elif split.scheme == 'kafka':
+        topic = split.path[1:] # remove the leading slash
+        return Tuber.KafkaAdapter(direction, split.hostname, split.port, topic)
     else:
         raise ArgumentError("Unsupported protocol {} in {}: ".format(split.scheme, url))
 
