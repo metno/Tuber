@@ -30,4 +30,3 @@ class KafkaAdapter(BaseAdapter):
         message = bytes(message)
         record = self.producer.send(self.topic, message)
         record_metadata = record.get(timeout=10)
-        print('sent: {} (offset: {})'.format(message[:15], record_metadata.offset))

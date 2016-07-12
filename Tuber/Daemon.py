@@ -3,6 +3,7 @@
 #
 
 import Tuber
+from Tuber import TuberLogger, WMOBulletin
 
 from argparse import ArgumentParser
 from urllib.parse import urlsplit
@@ -19,6 +20,8 @@ def makeAdapter(url, direction):
         raise ArgumentError("Unsupported protocol {} in {}: ".format(split.scheme, url))
 
 def main():
+    TuberLogger.info('Starting')
+
     parser = ArgumentParser()
     parser.add_argument("source")
     parser.add_argument("destination")
@@ -30,7 +33,13 @@ def main():
             receiver = makeAdapter(args.source, 'input')
 
             for msg in receiver:
+                ahl = WMOBulletin.findAHL(msg).decode('ascii', 'ignore')
+                TuberLogger.info('received {}'.format(ahl))
+
                 sender.send(msg)
+                TuberLogger.info('sent {}'.format(ahl))
 
         except ConnectionError as e:
-            sys.stderr.write(str(e))
+            TuberLogger.error(str(e))
+        except Exception as e:
+            TuberLogger.exception(e)

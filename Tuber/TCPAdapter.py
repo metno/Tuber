@@ -4,6 +4,7 @@
 
 from Tuber.BaseAdapter import BaseAdapter
 from Tuber import TuberParseError, TuberIncompleteMessage
+from Tuber import TuberLogger
 
 import socket
 import sys
@@ -43,12 +44,12 @@ class TCPAdapter(BaseAdapter):
             except TuberIncompleteMessage:
                 pass # try again when we have received more data from the socket
             except Exception as e:
-                sys.stderr.write('Error parsing message: {}\n'.format(e))
+                TuberLogger.error('Error parsing message: {}'.format(e))
 
             # receive data from our socket and add it to our buffer
             chunk = self._socket.recv(4096)
             if len(chunk) == 0:
-                raise StopIteration('Remote host closed the connection\n')
+                raise StopIteration('Remote host closed the connection')
             self._buffer = self._buffer + chunk
 
 
@@ -68,8 +69,6 @@ class TCPAdapter(BaseAdapter):
                 raise ConnectionError('Error writing to socket')
             total_sent = total_sent + sent
 
-        print('sent: {}'.format(encoded_msg))
-
         self._csn = self._csn + 1 % pow(10, self.csn_digits)
 
     def _connect(self):
@@ -79,16 +78,17 @@ class TCPAdapter(BaseAdapter):
                     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     s.bind((self.host, self.port))
                     s.listen(0)
-                    sys.stderr.write('Waiting for connection\n')
+                    TuberLogger.info('Listening on {}:{}'.format(self.host, self.port))
                     self._socket, address = s.accept()
-                    sys.stderr.write('Connection accepted from {}\n'.format(address))
+                    TuberLogger.info('Connection accepted from {}:{}\n'.format(address[0], address[1]))
                 else:
                     self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    sys.stderr.write('Connecting to {}:{}\n'.format(self.host, self.port))
+                    TuberLogger.info('Connecting to {}:{}\n'.format(self.host, self.port))
                     self._socket.connect((self.host, self.port))
+                    TuberLogger.info('Connecting to {}:{}\n'.format(self.host, self.port))
                 break
             except (OSError, ConnectionRefusedError) as e:
-                    sys.stderr.write('{}. Retrying in 10 seconds\n'.format(e))
+                    TuberLogger.error('{}. Retrying in 10 seconds'.format(e))
                     time.sleep(10)
 
 

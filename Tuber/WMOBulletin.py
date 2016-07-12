@@ -9,7 +9,7 @@ def findAHL(message):
     Find the abbreviated header line in a message
 
     Param message: message as bytes
-    Returns a MatchObject witch may contain the AHL
+    Returns a string that may contain the AHL
     """
 
-    return re.search(br'[A-Z]{4}\d{2} [A-Z]{4} \d{6}( [A-Z]{3})?', message)
+    return re.search(br'[A-Z]{4}\d{2} [A-Z]{4} \d{6}( [A-Z]{3})?', message).group(0)
