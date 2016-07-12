@@ -36,22 +36,21 @@ class TCPAdapter(BaseAdapter):
 
     def receive(self):
         while True:
-            chunk = self._socket.recv(4096)
-            print('received: {}'.format(chunk))
-            if len(chunk) == 0:
-                sys.stderr.write('Remote host closed the connection\n')
-
-            self._buffer = self._buffer + chunk
-            if len(self._buffer) == 0:
-                raise StopIteration('All remaining messages proccessed')
-
+            # first, check if we already have an unprocessed message waiting in our buffer
             try:
                 msg = self._parse_message()
                 return msg
-            except TuberIncompleteMessage: #raised when we do not have a complete message in the buffer
-                pass
+            except TuberIncompleteMessage:
+                pass # try again when we have received more data from the socket
             except Exception as e:
                 sys.stderr.write('Error parsing message: {}\n'.format(e))
+
+            # receive data from our socket and add it to our buffer
+            chunk = self._socket.recv(4096)
+            if len(chunk) == 0:
+                raise StopIteration('Remote host closed the connection\n')
+            self._buffer = self._buffer + chunk
+
 
     def send(self, message):
         message = bytes(message)
@@ -108,16 +107,25 @@ class TCPAdapter(BaseAdapter):
 
         pos = 0 # our current position in the buffer
 
+        # check if there is something to work on in the buffer
+        if len(self._buffer) <= 10:
+            raise TuberIncompleteMessage('Message not complete')
+
         length = self._buffer[:8]
         pos = 8
         try:
             length = int(length)
         except ValueError:
+            self._buffer = self._buffer[:8]
             raise TuberParseError('Invalid message length {}'.format(length))
 
         raw_msg = self._buffer[:length + 10] # length and type fields takes 10 bytes
         if len(raw_msg) < length + 10:
             raise TuberIncompleteMessage('Message not complete')
+
+        # remove the chunk we're working on from the buffer so we do not attempt to
+        # reprocess it we must throw an exception
+        self._buffer = self._buffer[len(raw_msg):]
 
         msg_type = raw_msg[pos:pos + 2]
         if msg_type not in [b'BI', b'AB', b'FX']:
@@ -138,10 +146,7 @@ class TCPAdapter(BaseAdapter):
             raise TuberParseError('Message end not found (found {})'.format(raw_msg[-20:]))
         end_pos = pos + end_match.start(0)
 
-        msg = raw_msg[start_pos:end_pos]
-        self._buffer = self._buffer[len(raw_msg):]
-
-        return msg
+        return raw_msg[start_pos:end_pos]
 
     def __del__(self):
         if self._socket:
