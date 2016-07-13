@@ -32,7 +32,8 @@ def main():
             sender = makeAdapter(args.destination, 'output')
             receiver = makeAdapter(args.source, 'input')
 
-            for msg in receiver:
+            while True:
+                msg = receiver.receive()
                 ahl = WMOBulletin.findAHL(msg).decode('ascii', 'ignore')
                 TuberLogger.info('received {}'.format(ahl))
 

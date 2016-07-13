@@ -49,7 +49,7 @@ class TCPAdapter(BaseAdapter):
             # receive data from our socket and add it to our buffer
             chunk = self._socket.recv(4096)
             if len(chunk) == 0:
-                raise StopIteration('Remote host closed the connection')
+                raise ConnectionResetError()
             self._buffer = self._buffer + chunk
 
 
