@@ -3,6 +3,8 @@
 
 from dateutil.tz import *
 from datetime import datetime
+import socket
+import os
 
 class BaseAdapter:
     def __init__(self, direction):
@@ -25,6 +27,10 @@ class BaseAdapter:
 
         dt = datetime.now(tzlocal())
         message.set_header('Queue-time', dt.strftime('%Y-%m-%dT%H:%M:%S.%f%z'))
+
+        hostname = socket.gethostname()
+        pid = os.getpid()
+        message.set_header('Queued-by', 'Tuber[{}] running on {}'.format(pid, hostname))
 
         self._send(message)
 
