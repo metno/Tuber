@@ -35,10 +35,10 @@ def main():
             while True:
                 msg = receiver.receive()
                 ahl = WMOBulletin.findAHL(msg).decode('ascii', 'ignore')
-                TuberLogger.info('received {}'.format(ahl))
+                TuberLogger.info('{} received from {}'.format(ahl, receiver))
 
                 sender.send(msg)
-                TuberLogger.info('sent {}'.format(ahl))
+                TuberLogger.info('{} delivered to {}'.format(ahl, sender))
 
         except ConnectionError as e:
             TuberLogger.error(str(e))

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from Tuber.BaseAdapter import BaseAdapter
+from Tuber import TuberLogger
 
 from kafka import KafkaProducer
 from kafka.errors import KafkaError
@@ -18,6 +19,8 @@ class KafkaAdapter(BaseAdapter):
         self.port = port
         self.topic = topic
 
+        self.url = 'kafka://{}:{}/{}'.format(self.host, self.port, self.topic)
+
         self._connect()
 
     def _connect(self):
@@ -25,6 +28,8 @@ class KafkaAdapter(BaseAdapter):
             pass
         else:
             self.producer = KafkaProducer(bootstrap_servers=['{}:{}'.format(self.host, self.port)])
+            TuberLogger.info('Connected to {}'.format(self.url))
+
 
     def send(self, message):
         message = bytes(message)

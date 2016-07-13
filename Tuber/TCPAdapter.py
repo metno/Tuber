@@ -81,11 +81,16 @@ class TCPAdapter(BaseAdapter):
                     TuberLogger.info('Listening on {}:{}'.format(self.host, self.port))
                     self._socket, address = s.accept()
                     TuberLogger.info('Connection accepted from {}:{}\n'.format(address[0], address[1]))
+                    # update the url now that we know who we're talking to
+                    self.url = 'gts://{}:{}'.format(address[0], address[1])
                 else:
+                    self.url = 'gts://{}:{}'.format(self.host, self.port)
+
                     self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    TuberLogger.info('Connecting to {}:{}\n'.format(self.host, self.port))
+                    TuberLogger.info('Connecting to {}'.format(self.url))
                     self._socket.connect((self.host, self.port))
-                    TuberLogger.info('Connecting to {}:{}\n'.format(self.host, self.port))
+                    TuberLogger.info('Connected to {}'.format(self.url))
+
                 break
             except (OSError, ConnectionRefusedError) as e:
                     TuberLogger.error('{}. Retrying in 10 seconds'.format(e))

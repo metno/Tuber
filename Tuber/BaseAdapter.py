@@ -6,7 +6,7 @@ class BaseAdapter:
         if direction not in ['input' , 'output']:
             raise Exception("Illegal direction {}. Must be either 'input' or 'output'".format(direction))
         self.direction = direction
-
+        self.url = "none"
 
     def receive(self):
         """
@@ -23,3 +23,5 @@ class BaseAdapter:
         """
         raise NotImplementedError()
 
+    def __str__(self):
+        return self.url
