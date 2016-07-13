@@ -32,8 +32,8 @@ class Message:
 
     def serialize(self):
         serialized = b''
-        for k in self.headers.keys():
-            header = '# ' + k + '=' + self.headers[k][1]
+        for v in self.headers.values():
+            header = '# ' + v[0] + '=' + v[1]
             serialized = serialized + header.encode('ascii', 'ignore') + b'\n'
         serialized = serialized + self.wmobulletin
         return serialized
