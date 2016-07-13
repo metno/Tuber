@@ -18,7 +18,7 @@ except FileNotFoundError:
     log_handler = logging.StreamHandler()
     log_handler.setFormatter(formatter)
     TuberLogger.addHandler(log_handler)
-TuberLogger.error("Could not create a syslog log handler, logging to stderr")
+    TuberLogger.error("Could not create a syslog log handler, logging to stderr")
 
 class TuberException(Exception):
     pass
