@@ -10,9 +10,15 @@ import os
 TuberLogger = logging.getLogger('tuber')
 TuberLogger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(name)s[{}]: %(message)s'.format(os.getpid()))
-log_handler = logging.handlers.SysLogHandler(address = '/dev/log')
-log_handler.setFormatter(formatter)
-TuberLogger.addHandler(log_handler)
+try:
+    log_handler = logging.handlers.SysLogHandler(address = '/dev/log')
+    log_handler.setFormatter(formatter)
+    TuberLogger.addHandler(log_handler)
+except FileNotFoundError:
+    log_handler = logging.StreamHandler()
+    log_handler.setFormatter(formatter)
+    TuberLogger.addHandler(log_handler)
+TuberLogger.error("Could not create a syslog log handler, logging to stderr")
 
 class TuberException(Exception):
     pass
