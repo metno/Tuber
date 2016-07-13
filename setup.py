@@ -26,7 +26,7 @@ setup(
         'Development Status :: 3 - Alpha',
         'Programming Language :: Python :: 3',
     ],
-    install_requires=['kafka-python'],
+    install_requires=['kafka-python', 'python-dateutil'],
     keywords='GTS WMO Kafka',
     packages=find_packages(),
     entry_points={

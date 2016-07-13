@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
+
+import re
+
+class Message:
+    re_ahl = re.compile(br'[A-Z]{4}\d{2} [A-Z]{4} \d{6}( [A-Z]{3})?')
+    re_header = re.compile(br'^#(.*)=(.*)')
+
+    def __init__(self, raw_message):
+        m = self.re_ahl.search(raw_message)
+        if not m:
+            raise TuberParseError('No ahl found in {}...'.format(raw_message[:20]))
+        self.ahl = raw_message[m.start():m.end()]
+        self.ahl = self.ahl.decode('ascii', 'ignore')
+        self.wmobulletin = raw_message[m.start():]
+
+        self.headers = {}
+        raw_headers = raw_message[:m.start()].decode('ascii', 'ignore')
+        for line in raw_headers.splitlines():
+            m = self.re_header.search(line)
+            if not m:
+                raise TuberParseError('Expected a header line in {}...'.format(line[:20]))
+            self.set_header(m.group(1), m.group(2))
+
+    def set_header(self, key, value):
+        self.headers[key.lower()] = (key, value)
+
+    def get_header(self, key):
+        return self.headers[key.lower()][1]
+
+    def serialize(self):
+        serialized = b''
+        for k in self.headers.keys():
+            header = '# ' + k + '=' + self.headers[k][1]
+            serialized = serialized + header.encode('ascii', 'ignore') + b'\n'
+        serialized = serialized + self.wmobulletin
+        return serialized

@@ -5,6 +5,7 @@
 from Tuber.BaseAdapter import BaseAdapter
 from Tuber import TuberParseError, TuberIncompleteMessage
 from Tuber import TuberLogger
+from Tuber.Message import Message
 
 import socket
 import sys
@@ -151,7 +152,7 @@ class TCPAdapter(BaseAdapter):
             raise TuberParseError('Message end not found (found {})'.format(raw_msg[-20:]))
         end_pos = pos + end_match.start(0)
 
-        return raw_msg[start_pos:end_pos]
+        return Message(raw_msg[start_pos:end_pos])
 
     def __del__(self):
         if self._socket:

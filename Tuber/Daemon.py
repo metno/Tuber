@@ -3,7 +3,7 @@
 #
 
 import Tuber
-from Tuber import TuberLogger, WMOBulletin
+from Tuber import TuberLogger
 
 from argparse import ArgumentParser
 from urllib.parse import urlsplit
@@ -30,15 +30,15 @@ def main():
     while True:
         try:
             sender = makeAdapter(args.destination, 'output')
+            sender.header_timestamp = True
             receiver = makeAdapter(args.source, 'input')
 
             while True:
                 msg = receiver.receive()
-                ahl = WMOBulletin.findAHL(msg).decode('ascii', 'ignore')
-                TuberLogger.info('{} received from {}'.format(ahl, receiver))
+                TuberLogger.info('{} received from {}'.format(msg.ahl, receiver))
 
                 sender.send(msg)
-                TuberLogger.info('{} delivered to {}'.format(ahl, sender))
+                TuberLogger.info('{} delivered to {}'.format(msg.ahl, sender))
 
         except ConnectionError as e:
             TuberLogger.error(str(e))

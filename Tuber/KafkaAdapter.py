@@ -31,7 +31,6 @@ class KafkaAdapter(BaseAdapter):
             TuberLogger.info('Connected to {}'.format(self.url))
 
 
-    def send(self, message):
-        message = bytes(message)
-        record = self.producer.send(self.topic, message)
+    def _send(self, message):
+        record = self.producer.send(self.topic, message.serialize())
         record_metadata = record.get(timeout=10)
