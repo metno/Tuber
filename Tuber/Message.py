@@ -4,9 +4,11 @@
 
 import re
 
+from Tuber import TuberParseError
+
 class Message:
     re_ahl = re.compile(br'[A-Z]{4}\d{2} [A-Z]{4} \d{6}( [A-Z]{3})?')
-    re_header = re.compile(br'^#(.*)=(.*)')
+    re_header = re.compile(r'^#(.*)=(.*)')
 
     def __init__(self, raw_message):
         m = self.re_ahl.search(raw_message)
@@ -25,10 +27,10 @@ class Message:
             self.set_header(m.group(1), m.group(2))
 
     def set_header(self, key, value):
-        self.headers[key.lower()] = (key, value)
+        self.headers[key.lower().strip()] = (key, value)
 
     def get_header(self, key):
-        return self.headers[key.lower()][1]
+        return self.headers[key.lower().strip()][1]
 
     def serialize(self):
         serialized = b''

@@ -33,5 +33,6 @@ setup(
         'console_scripts': [
             'tuber=Tuber.Daemon:main',
         ],
-    }
+    },
+    test_suite = 'tests'
 )
