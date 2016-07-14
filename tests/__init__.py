@@ -2,4 +2,4 @@
 # -*- coding: utf-8 -*-
 #
 
-from .TestMessage import TestMessage
+from .test_Message import *
