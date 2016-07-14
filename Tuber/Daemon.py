@@ -16,6 +16,8 @@ def makeAdapter(url, direction):
     elif split.scheme == 'kafka':
         topic = split.path[1:] # remove the leading slash
         return Tuber.KafkaAdapter(direction, split.hostname, split.port, topic)
+    elif split.scheme == 'null':
+        return Tuber.NullAdapter(direction)
     else:
         raise ArgumentError("Unsupported protocol {} in {}: ".format(split.scheme, url))
 

@@ -32,3 +32,4 @@ class TuberIncompleteMessage(TuberException):
 from .BaseAdapter import BaseAdapter
 from .TCPAdapter import TCPAdapter
 from .KafkaAdapter import KafkaAdapter
+from .NullAdapter import NullAdapter
