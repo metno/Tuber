@@ -33,3 +33,4 @@ from .BaseAdapter import BaseAdapter
 from .TCPAdapter import TCPAdapter
 from .KafkaAdapter import KafkaAdapter
 from .NullAdapter import NullAdapter
+from .Message import Message

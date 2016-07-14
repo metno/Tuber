@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 #
 
-from Tuber.BaseAdapter import BaseAdapter
+from Tuber import BaseAdapter
 from Tuber import TuberParseError, TuberIncompleteMessage
 from Tuber import TuberLogger
-from Tuber.Message import Message
+from Tuber import Message
 
 import socket
 import sys
