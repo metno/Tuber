@@ -14,7 +14,7 @@ try:
     log_handler = logging.handlers.SysLogHandler(address = '/dev/log')
     log_handler.setFormatter(formatter)
     TuberLogger.addHandler(log_handler)
-except FileNotFoundError:
+except OSError: # FileNotFoundError on python3.5
     log_handler = logging.StreamHandler()
     log_handler.setFormatter(formatter)
     TuberLogger.addHandler(log_handler)
