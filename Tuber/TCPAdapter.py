@@ -19,8 +19,8 @@ class TCPAdapter(BaseAdapter):
     Adapter for communicating with GTS TCP sockets
     """
 
-    re_message_start = re.compile(rb'^\x01\r\r\n(?P<csn>\d{0,5})\r\r\n')
-    re_message_end = re.compile(rb'\r\r\n\x03$')
+    re_message_start = re.compile(br'^\x01\r\r\n(?P<csn>\d{0,5})\r\r\n')
+    re_message_end = re.compile(br'\r\r\n\x03$')
 
 
     def __init__(self, direction, host, port):
