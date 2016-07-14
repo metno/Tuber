@@ -156,4 +156,5 @@ class TCPAdapter(BaseAdapter):
 
     def __del__(self):
         if self._socket:
+            TuberLogger.info('Closing connection to {}'.format(self.url))
             self._socket.close()
