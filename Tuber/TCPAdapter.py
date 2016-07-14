@@ -56,19 +56,11 @@ class TCPAdapter(BaseAdapter):
 
     def send(self, message):
         csn = bytes(str(self._csn).zfill(self.csn_digits), 'ascii')
-
         encoded_msg = b'\x01\r\r\n' + csn + b'\r\r\n' + message.wmobulletin + b'\r\r\n\x03'
-
         length = bytes(str(len(encoded_msg)).zfill(8), 'ascii')
         encoded_msg = length + b'BI' + encoded_msg
 
-        total_sent = 0
-        while total_sent < len(encoded_msg):
-            sent = self._socket.send(encoded_msg[total_sent:])
-            if sent == 0:
-                raise ConnectionError('Error writing to socket')
-            total_sent = total_sent + sent
-
+        self._socket.sendall(encoded_msg)
         self._csn = self._csn + 1 % pow(10, self.csn_digits)
 
     def _connect(self):
@@ -76,6 +68,7 @@ class TCPAdapter(BaseAdapter):
             try:
                 if self.direction == 'input':
                     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                     s.bind((self.host, self.port))
                     s.listen(0)
                     TuberLogger.info('Listening on {}:{}'.format(self.host, self.port))
@@ -85,8 +78,8 @@ class TCPAdapter(BaseAdapter):
                     self.url = 'gts://{}:{}'.format(address[0], address[1])
                 else:
                     self.url = 'gts://{}:{}'.format(self.host, self.port)
-
                     self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                     TuberLogger.info('Connecting to {}'.format(self.url))
                     self._socket.connect((self.host, self.port))
                     TuberLogger.info('Connected to {}'.format(self.url))
