@@ -21,17 +21,33 @@ except (OSError, socket.error): # FileNotFoundError on python3.5
     TuberLogger.addHandler(log_handler)
     TuberLogger.error("Could not create a syslog log handler, logging to stderr")
 
+
 class TuberException(Exception):
     pass
 
-class TuberParseError(TuberException):
+
+class TuberIOError(TuberException):
+    """
+    Represents an error in the underlyeing data stream
+
+    E.g. unreachable remote host
+    """
     pass
 
-class TuberIncompleteMessage(TuberException):
+
+class TuberMessageError(TuberException):
+    """
+    Represents a problem with a single message.
+    """
     pass
 
-class TuberDuplicateMessage(TuberException):
+
+class TuberIncompleteMessage(TuberMessageError):
+    """
+    Represents an error caused by an incomplete message.
+    """
     pass
+
 
 from .BaseAdapter import BaseAdapter
 from .TCPAdapter import TCPAdapter

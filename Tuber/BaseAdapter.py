@@ -6,7 +6,7 @@ from datetime import datetime
 import socket
 import os
 
-from Tuber import TuberDuplicateMessage
+from Tuber import TuberMessageError
 
 class BaseAdapter:
     def __init__(self, direction):
@@ -20,6 +20,9 @@ class BaseAdapter:
     def receive(self):
         """
         Receive a single Tuber.Message
+
+        Returns a Tuber.Message
+        Raises TuberMessageError and TuberIOError
         """
         raise NotImplementedError()
 
@@ -31,12 +34,7 @@ class BaseAdapter:
 
         # we should avoid sending duplicates
         if message.hash in self._seen_messages:
-            raise TuberDuplicateMessage('Duplicate message')
-        self._seen_messages.add(message.hash)
-
-        # only check for duplicates for the last 1000 messages
-        if len(self._seen_messages) > 1000:
-            self._seen_messages = set()
+            raise TuberMessageError('Duplicate message')
 
         dt = datetime.now(tzlocal())
         message.set_header('Queue-time', dt.strftime('%Y-%m-%dT%H:%M:%S.%f%z'))
@@ -46,6 +44,12 @@ class BaseAdapter:
         message.set_header('Queued-by', 'Tuber[{}] running on {}'.format(pid, hostname))
 
         self._send(message)
+
+        # presumable the message was successfully sent, add it to the list of seen messages
+        self._seen_messages.add(message.hash)
+        # only check for duplicates for the last 1000 messages
+        if len(self._seen_messages) > 1000:
+            self._seen_messages = set()
 
 
     def _send(self, message):

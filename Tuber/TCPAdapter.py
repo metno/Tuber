@@ -3,9 +3,9 @@
 #
 
 from Tuber import BaseAdapter
-from Tuber import TuberParseError, TuberIncompleteMessage
+from Tuber import TuberIOError, TuberIncompleteMessage
 from Tuber import TuberLogger
-from Tuber import Message
+from Tuber.Message import Message
 
 import socket
 import sys
@@ -37,6 +37,9 @@ class TCPAdapter(BaseAdapter):
         self._connect()
 
     def receive(self):
+        if self._socket == None:
+            self._connect()
+
         while True:
             # first, check if we already have an unprocessed message waiting in our buffer
             try:
@@ -44,51 +47,60 @@ class TCPAdapter(BaseAdapter):
                 return msg
             except TuberIncompleteMessage:
                 pass # try again when we have received more data from the socket
-            except Exception as e:
-                TuberLogger.error('Error parsing message: {}'.format(e))
 
             # receive data from our socket and add it to our buffer
             chunk = self._socket.recv(4096)
             if len(chunk) == 0:
-                raise ConnectionResetError()
+                self._socket = None
+                raise TuberIOError('Remote host closed the connection')
             self._buffer = self._buffer + chunk
 
 
     def _send(self, message):
+        if self._socket == None:
+            self._connect()
+
         csn = bytes(str(self._csn).zfill(self.csn_digits), 'ascii')
         encoded_msg = b'\x01\r\r\n' + csn + b'\r\r\n' + message.wmobulletin + b'\r\r\n\x03'
         length = bytes(str(len(encoded_msg)).zfill(8), 'ascii')
         encoded_msg = length + b'BI' + encoded_msg
 
-        self._socket.sendall(encoded_msg)
+        try:
+            self._socket.sendall(encoded_msg)
+        except OSError as e:
+            self._socket = None
+            raise TuberIOError from e
+
         self._csn = self._csn + 1 % pow(10, self.csn_digits)
 
     def _connect(self):
-        while True:
-            try:
-                if self.direction == 'input':
-                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                    s.bind((self.host, self.port))
-                    s.listen(0)
-                    TuberLogger.info('Listening on {}:{}'.format(self.host, self.port))
-                    self._socket, address = s.accept()
-                    TuberLogger.info('Connection accepted from {}:{}\n'.format(address[0], address[1]))
-                    # update the url now that we know who we're talking to
-                    self.url = 'gts://{}:{}'.format(address[0], address[1])
-                else:
-                    self.url = 'gts://{}:{}'.format(self.host, self.port)
-                    self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                    TuberLogger.info('Connecting to {}'.format(self.url))
-                    self._socket.connect((self.host, self.port))
-                    TuberLogger.info('Connected to {}'.format(self.url))
-
-                break
-            except (OSError, ConnectionRefusedError) as e:
-                    TuberLogger.error('{}. Retrying in 10 seconds'.format(e))
-                    time.sleep(10)
-
+        try:
+            if self.direction == 'input':
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                s.bind((self.host, self.port))
+                s.listen(0)
+                TuberLogger.info('Listening on {}:{}'.format(self.host, self.port))
+                self._socket, address = s.accept()
+                TuberLogger.info('Connection accepted from {}:{}\n'.format(address[0], address[1]))
+                # update the url now that we know who we're talking to
+                self.url = 'gts://{}:{}'.format(address[0], address[1])
+            else:
+                while True:
+                    try:
+                        self.url = 'gts://{}:{}'.format(self.host, self.port)
+                        self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                        self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                        TuberLogger.info('Connecting to {}'.format(self.url))
+                        self._socket.connect((self.host, self.port))
+                        TuberLogger.info('Connected to {}'.format(self.url))
+                    except (OSError, ConnectionRefusedError) as e:
+                        TuberLogger.error('Error connecting to {}: {}. retrying in 10 seconds'.format(self.url, e))
+                        time.sleep(10)
+                    else:
+                        break
+        except (OSError, ConnectionRefusedError) as e:
+            raise TuberIOError('Error setting up connection: {}'.format(e))
 
     def _parse_message(self):
         """
@@ -115,7 +127,7 @@ class TCPAdapter(BaseAdapter):
             length = int(length)
         except ValueError:
             self._buffer = self._buffer[:8]
-            raise TuberParseError('Invalid message length {}'.format(length))
+            raise TuberMessageError('Invalid message length {}'.format(length))
 
         raw_msg = self._buffer[:length + 10] # length and type fields takes 10 bytes
         if len(raw_msg) < length + 10:
@@ -127,12 +139,12 @@ class TCPAdapter(BaseAdapter):
 
         msg_type = raw_msg[pos:pos + 2]
         if msg_type not in [b'BI', b'AB', b'FX']:
-            raise TuberParseError('Ivalid message type {}'.format(msg_type))
+            raise TuberMessageError('Ivalid message type {}'.format(msg_type))
         pos = pos + 2
 
         start_match = self.re_message_start.match(raw_msg[pos:])
         if not start_match:
-            raise TuberParseError('Message start not found (found {})'.format(raw_msg[pos:pos + 20]))
+            raise TuberMessageError('Message start not found (found {})'.format(raw_msg[pos:pos + 20]))
 
         if start_match.group('csn'):
             self._csn = int(start_match.group('csn'))
@@ -141,7 +153,7 @@ class TCPAdapter(BaseAdapter):
 
         end_match = self.re_message_end.search(raw_msg[pos:])
         if not end_match:
-            raise TuberParseError('Message end not found (found {})'.format(raw_msg[-20:]))
+            raise TuberMessageError('Message end not found (found {})'.format(raw_msg[-20:]))
         end_pos = pos + end_match.start(0)
 
         return Message(raw_msg[start_pos:end_pos])
