@@ -3,6 +3,7 @@
 #
 
 import re
+import hashlib
 
 from Tuber import TuberParseError
 
@@ -25,6 +26,8 @@ class Message:
             if not m:
                 raise TuberParseError('Expected a header line in {}...'.format(line[:20]))
             self.set_header(m.group(1), m.group(2))
+
+        self.hash = hashlib.md5(self.wmobulletin).digest()
 
     def set_header(self, key, value):
         self.headers[key.lower().strip()] = (key, value)

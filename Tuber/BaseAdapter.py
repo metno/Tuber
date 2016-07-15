@@ -6,12 +6,16 @@ from datetime import datetime
 import socket
 import os
 
+from Tuber import TuberDuplicateMessage
+
 class BaseAdapter:
     def __init__(self, direction):
         if direction not in ['input' , 'output']:
             raise Exception("Illegal direction {}. Must be either 'input' or 'output'".format(direction))
         self.direction = direction
         self.url = "none"
+
+        self._seen_messages = set()
 
     def receive(self):
         """
@@ -24,6 +28,15 @@ class BaseAdapter:
         """
         Sends a Tuber.Message.
         """
+
+        # we should avoid sending duplicates
+        if message.hash in self._seen_messages:
+            raise TuberDuplicateMessage('Duplicate message')
+        self._seen_messages.add(message.hash)
+
+        # only check for duplicates for the last 1000 messages
+        if len(self._seen_messages) > 1000:
+            self._seen_messages = set()
 
         dt = datetime.now(tzlocal())
         message.set_header('Queue-time', dt.strftime('%Y-%m-%dT%H:%M:%S.%f%z'))

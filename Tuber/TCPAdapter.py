@@ -54,7 +54,7 @@ class TCPAdapter(BaseAdapter):
             self._buffer = self._buffer + chunk
 
 
-    def send(self, message):
+    def _send(self, message):
         csn = bytes(str(self._csn).zfill(self.csn_digits), 'ascii')
         encoded_msg = b'\x01\r\r\n' + csn + b'\r\r\n' + message.wmobulletin + b'\r\r\n\x03'
         length = bytes(str(len(encoded_msg)).zfill(8), 'ascii')

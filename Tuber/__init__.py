@@ -30,6 +30,9 @@ class TuberParseError(TuberException):
 class TuberIncompleteMessage(TuberException):
     pass
 
+class TuberDuplicateMessage(TuberException):
+    pass
+
 from .BaseAdapter import BaseAdapter
 from .TCPAdapter import TCPAdapter
 from .KafkaAdapter import KafkaAdapter

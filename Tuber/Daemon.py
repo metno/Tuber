@@ -4,6 +4,7 @@
 
 import Tuber
 from Tuber import TuberLogger
+from Tuber import TuberDuplicateMessage
 
 from argparse import ArgumentParser
 from urllib.parse import urlsplit
@@ -32,15 +33,17 @@ def main():
     while True:
         try:
             sender = makeAdapter(args.destination, 'output')
-            sender.header_timestamp = True
             receiver = makeAdapter(args.source, 'input')
 
             while True:
                 msg = receiver.receive()
                 TuberLogger.info('{} received from {}'.format(msg.ahl, receiver))
 
-                sender.send(msg)
-                TuberLogger.info('{} delivered to {}'.format(msg.ahl, sender))
+                try:
+                    sender.send(msg)
+                    TuberLogger.info('{} delivered to {}'.format(msg.ahl, sender))
+                except TuberDuplicateMessage as e:
+                    TuberLogger.info('Dropping {}. Reason: {}'.format(msg.ahl, e))
 
         except ConnectionError as e:
             TuberLogger.error(str(e))
