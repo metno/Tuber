@@ -39,47 +39,46 @@ def main():
     try:
         sender = makeAdapter(args.destination, 'output')
         receiver = makeAdapter(args.source, 'input')
-    except Exception as e:
-        TuberLogger.exception(e)
-        sys.exit(1)
-
-
-    try:
-        while True:
-            msg = None
-
+    except TuberIOError as e:
+        TuberLogger.error(e)
+        sys.stderr.write(str(e) + '\n')
+    else:
+        try:
             while True:
-                try:
-                    msg = receiver.receive()
-                except TuberMessageError as e:
-                    TuberLogger.error('Error processing message {}: {}'.format(msg.ahl, e))
-                    break
-                except TuberIOError as e:
-                    TuberLogger.error('{}: retrying in 5 seconds'.format(e))
-                    time.sleep(5)
-                else:
-                    TuberLogger.info('{} received from {}'.format(msg.ahl, receiver))
-                    break
+                msg = None
 
-            if not msg:
-                continue
+                while True:
+                    try:
+                        msg = receiver.receive()
+                    except TuberMessageError as e:
+                        TuberLogger.error('Error processing message {}: {}'.format(msg.ahl, e))
+                        break
+                    except TuberIOError as e:
+                        TuberLogger.error('{}: retrying in 5 seconds'.format(e))
+                        time.sleep(5)
+                    else:
+                        TuberLogger.info('{} received from {}'.format(msg.ahl, receiver))
+                        break
 
-            while True:
-                try:
-                    sender.send(msg)
-                except TuberMessageError as e:
-                    TuberLogger.error('Error processing message {}: {}'.format(msg.ahl, e))
-                    break
-                except TuberIOError as e:
-                    TuberLogger.error('{}: retrying in 5 seconds'.format(e))
-                    time.sleep(5)
-                else:
-                    TuberLogger.info('{} delivered to {}'.format(msg.ahl, sender))
-                    break
+                if not msg:
+                    continue
+
+                while True:
+                    try:
+                        sender.send(msg)
+                    except TuberMessageError as e:
+                        TuberLogger.error('Error processing message {}: {}'.format(msg.ahl, e))
+                        break
+                    except TuberIOError as e:
+                        TuberLogger.error('{}: retrying in 5 seconds'.format(e))
+                        time.sleep(5)
+                    else:
+                        TuberLogger.info('{} delivered to {}'.format(msg.ahl, sender))
+                        break
 
 
-    except Exception as e:
-        TuberLogger.exception(e)
-        sys.exit(1)
+        except Exception as e:
+            TuberLogger.exception(e)
+            sys.exit(1)
 
     TuberLogger.info('Shutting down')
