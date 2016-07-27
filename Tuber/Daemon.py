@@ -11,7 +11,7 @@ from urllib.parse import urlsplit
 import time
 import sys
 
-def makeAdapter(url, direction):
+def makeAdapter(url, direction, args):
     split = urlsplit(url)
 
     if split.scheme == 'gts':
@@ -19,10 +19,16 @@ def makeAdapter(url, direction):
     elif split.scheme == 'kafka':
         topic = split.path[1:] # remove the leading slash
         return Tuber.KafkaAdapter(direction, split.hostname, split.port, topic)
+    elif split.scheme == 'kafkassl':
+        topic = split.path[1:] # remove the leading slash
+        return Tuber.KafkaAdapter(direction, split.hostname, split.port, topic,
+                                  security_protocol="SASL_SSL", ssl_cafile=args.ssl_cafile,
+                                  sasl_plain_username=args.username,
+                                  sasl_plain_password=args.password)
     elif split.scheme == 'null':
         return Tuber.NullAdapter(direction)
     else:
-        raise ArgumentError("Unsupported protocol {} in {}: ".format(split.scheme, url))
+        raise ValueError("Unsupported protocol {} in {}: ".format(split.scheme, url))
 
 
 def main():
@@ -31,16 +37,18 @@ def main():
     parser = ArgumentParser()
     parser.add_argument("source")
     parser.add_argument("destination")
+    parser.add_argument("--ssl-cafile")
+    parser.add_argument("--username")
+    parser.add_argument("--password")
     args = parser.parse_args()
-
 
     receiver = None
     sender = None
     try:
-        sender = makeAdapter(args.destination, 'output')
-        receiver = makeAdapter(args.source, 'input')
-    except TuberIOError as e:
-        TuberLogger.error(e)
+        sender = makeAdapter(args.destination, 'output', args)
+        receiver = makeAdapter(args.source, 'input', args)
+    except Exception as e:
+        TuberLogger.exception(e)
         sys.stderr.write(str(e) + '\n')
     else:
         try:

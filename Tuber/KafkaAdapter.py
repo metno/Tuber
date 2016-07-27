@@ -16,25 +16,34 @@ class KafkaAdapter(BaseAdapter):
     Adapter for communicating with Kafka brokers
     """
 
-    def __init__(self, direction, host, port, topic):
+    def __init__(self, direction, host, port, topic, **kwargs):
         super().__init__(direction)
         self.host = host
         self.port = port
         self.topic = topic
+        self.extra_opts = kwargs
 
-        self.url = 'kafka://{}:{}/{}'.format(self.host, self.port, self.topic)
+        scheme = 'kafka'
+
+        if 'sasl_plain_username' in self.extra_opts and 'sasl_plain_password' in self.extra_opts:
+            self.extra_opts['sasl_mechanism'] = 'PLAIN'
+            scheme = 'kafkassl'
+
+        self.url = '{}://{}:{}/{}'.format(scheme, self.host, self.port, self.topic)
 
         self._connect()
 
     def _connect(self):
+        bootstrap_servers = ['{}:{}'.format(self.host, self.port)]
         try:
             if self.direction == 'input':
                 self._consumer = KafkaConsumer(self.topic,
-                                                   bootstrap_servers=['{}:{}'.format(self.host, self.port)])
+                                               bootstrap_servers=bootstrap_servers,
+                                               **self.extra_opts)
             else:
-                self._producer = KafkaProducer(bootstrap_servers=['{}:{}'.format(self.host, self.port)],
+                self._producer = KafkaProducer(bootstrap_servers=bootstrap_servers,
                                                retries=6,
-                                               max_block_ms = 1000 * 60 * 10)
+                                               **self.extra_opts)
             TuberLogger.info('Connected to {}'.format(self.url))
         except KafkaError as e:
             raise TuberIOError('Kafka error: {}'.format(e.__class__.__name__)) from e
