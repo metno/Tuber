@@ -10,6 +10,19 @@ from argparse import ArgumentParser
 from configparser import ConfigParser
 import time
 import sys
+import signal
+
+
+class SignalHandler():
+
+    def __init__(self):
+        self.signal_caught = False
+        signal.signal(signal.SIGINT, self.handle_signal)
+        signal.signal(signal.SIGTERM, self.handle_signal)
+
+    def handle_signal(self, signum, frame):
+        TuberLogger.info('Received signal {}'.format(signum))
+        self.signal_caught = True
 
 
 def makeAdapter(type, direction, **kwargs):
@@ -56,44 +69,40 @@ def main():
         # create our adapters
         sender = makeAdapter(output_type, 'output', **output_conf)
         receiver = makeAdapter(input_type, 'input', **input_conf)
+
+        # deal with SIGTERM and SIGINT
+        signal_handler = SignalHandler()
     except Exception as e:
         TuberLogger.exception(e)
         sys.stderr.write(str(e) + '\n')
         sys.stderr.write('Stacktrace logged\n')
     else:
         try:
-            while True:
-                msg = None
-
-                while True:
+            msg = None
+            while not signal_handler.signal_caught:
+                while not msg and not signal_handler.signal_caught:
                     try:
                         msg = receiver.receive()
+                        TuberLogger.info('{} received from {}'.format(msg.ahl, receiver))
                     except TuberMessageError as e:
                         TuberLogger.error('Error processing message {}: {}'.format(msg.ahl, e))
                         break
                     except TuberIOError as e:
                         TuberLogger.error('{}: retrying in 5 seconds'.format(e))
                         time.sleep(5)
-                    else:
-                        TuberLogger.info('{} received from {}'.format(msg.ahl, receiver))
-                        break
 
-                if not msg:
-                    continue
-
-                while True:
+                while msg:
                     try:
                         sender.send(msg)
+                        TuberLogger.info('{} delivered to {}'.format(msg.ahl, sender))
+                        msg = None
                     except TuberMessageError as e:
                         TuberLogger.error('Error processing message {}: {}'.format(msg.ahl, e))
+                        msg = None
                         break
                     except TuberIOError as e:
                         TuberLogger.error('{}: retrying in 5 seconds'.format(e))
                         time.sleep(5)
-                    else:
-                        TuberLogger.info('{} delivered to {}'.format(msg.ahl, sender))
-                        break
-
 
         except Exception as e:
             TuberLogger.exception(e)
