@@ -8,9 +8,9 @@ import logging.handlers
 import os
 import socket
 
-TuberLogger = logging.getLogger('tuber')
+TuberLogger = logging.getLogger("Tuber")
 TuberLogger.setLevel(logging.INFO)
-formatter = logging.Formatter('%(name)s[{}]: %(message)s'.format(os.getpid()))
+formatter = logging.Formatter('%(name)s %(levelname)s: %(message)s'.format(os.getpid()))
 try:
     log_handler = logging.handlers.SysLogHandler(address = '/dev/log')
     log_handler.setFormatter(formatter)
