@@ -16,11 +16,10 @@ class KafkaAdapter(BaseAdapter):
     Adapter for communicating with Kafka brokers
     """
 
-    def __init__(self, direction, host, port, topic, **kwargs):
+    def __init__(self, direction, bootstrap_servers, topic, **kwargs):
         super().__init__(direction)
-        self.host = host
-        self.port = port
         self.topic = topic
+        self.bootstrap_servers = bootstrap_servers
         self.extra_opts = kwargs
 
         scheme = 'kafka'
@@ -29,19 +28,18 @@ class KafkaAdapter(BaseAdapter):
             self.extra_opts['sasl_mechanism'] = 'PLAIN'
             scheme = 'kafkassl'
 
-        self.url = '{}://{}:{}/{}'.format(scheme, self.host, self.port, self.topic)
+        self.url = '{}://{}/{}'.format(scheme, self.bootstrap_servers[0], self.topic)
 
         self._connect()
 
     def _connect(self):
-        bootstrap_servers = ['{}:{}'.format(self.host, self.port)]
         try:
             if self.direction == 'input':
                 self._consumer = KafkaConsumer(self.topic,
-                                               bootstrap_servers=bootstrap_servers,
+                                               bootstrap_servers=self.bootstrap_servers,
                                                **self.extra_opts)
             else:
-                self._producer = KafkaProducer(bootstrap_servers=bootstrap_servers,
+                self._producer = KafkaProducer(bootstrap_servers=self.bootstrap_servers,
                                                retries=6,
                                                **self.extra_opts)
             TuberLogger.info('Connected to {}'.format(self.url))

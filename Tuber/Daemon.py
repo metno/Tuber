@@ -7,49 +7,59 @@ from Tuber import TuberLogger
 from Tuber import TuberMessageError, TuberIOError
 
 from argparse import ArgumentParser
-from urllib.parse import urlsplit
+from configparser import ConfigParser
 import time
 import sys
 
-def makeAdapter(url, direction, args):
-    split = urlsplit(url)
 
-    if split.scheme == 'gts':
-        return Tuber.TCPAdapter(direction, split.hostname, split.port)
-    elif split.scheme == 'kafka':
-        topic = split.path[1:] # remove the leading slash
-        return Tuber.KafkaAdapter(direction, split.hostname, split.port, topic)
-    elif split.scheme == 'kafkassl':
-        topic = split.path[1:] # remove the leading slash
-        return Tuber.KafkaAdapter(direction, split.hostname, split.port, topic,
-                                  security_protocol="SASL_SSL", ssl_cafile=args.ssl_cafile,
-                                  sasl_plain_username=args.username,
-                                  sasl_plain_password=args.password)
-    elif split.scheme == 'null':
+def makeAdapter(type, direction, **kwargs):
+    if type == 'gts':
+        if direction == 'input':
+            host, port = kwargs['bind'].split(':')
+        else:
+            host, port = kwargs['connect'].split(':')
+        port = int(port)
+        return Tuber.TCPAdapter(direction, host, port)
+    elif type == 'kafka':
+        bootstrap_servers = kwargs.pop('bootstrap_servers').split(',')
+        topic = kwargs.pop('topic')
+        return Tuber.KafkaAdapter(direction, bootstrap_servers, topic, **kwargs)
+    elif type == 'null':
         return Tuber.NullAdapter(direction)
     else:
-        raise ValueError("Unsupported protocol {} in {}: ".format(split.scheme, url))
+        raise ValueError('Unsupported type: {}'.format(type))
 
 
 def main():
     TuberLogger.info('Starting')
 
-    parser = ArgumentParser()
-    parser.add_argument("source")
-    parser.add_argument("destination")
-    parser.add_argument("--ssl-cafile")
-    parser.add_argument("--username")
-    parser.add_argument("--password")
-    args = parser.parse_args()
-
     receiver = None
     sender = None
+
     try:
-        sender = makeAdapter(args.destination, 'output', args)
-        receiver = makeAdapter(args.source, 'input', args)
+        # parse command line options
+        arg_parser = ArgumentParser()
+        arg_parser.add_argument("tube")
+        arg_parser.add_argument("--config", "-c", default="/etc/tuber.ini")
+        args = arg_parser.parse_args()
+
+        # parse config file
+        config = ConfigParser()
+        config.read(args.config)
+
+        output_conf = {key: value for (key, value) in config.items('{}:output'.format(args.tube))}
+        output_type = output_conf.pop('type')
+
+        input_conf = {key: value for (key, value) in config.items('{}:input'.format(args.tube))}
+        input_type = input_conf.pop('type')
+
+        # create our adapters
+        sender = makeAdapter(output_type, 'output', **output_conf)
+        receiver = makeAdapter(input_type, 'input', **input_conf)
     except Exception as e:
         TuberLogger.exception(e)
         sys.stderr.write(str(e) + '\n')
+        sys.stderr.write('Stacktrace logged\n')
     else:
         try:
             while True:
