@@ -52,7 +52,6 @@ class KafkaAdapter(BaseAdapter):
     def _send(self, message):
         try:
             record = self._producer.send(self.topic, message.serialize())
-            metadata = record.get(timeout=10)
         except KafkaError as e:
             raise TuberIOError('Kafka error: {}'.format(e.__class__.__name__)) from e
 
