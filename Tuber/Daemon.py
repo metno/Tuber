@@ -6,8 +6,12 @@ import Tuber
 from Tuber import TuberLogger
 from Tuber import TuberMessageError, TuberIOError
 
+try:
+    from configparser import ConfigParser
+except ImportError:
+    from ConfigParser import ConfigParser
+
 from argparse import ArgumentParser
-from configparser import ConfigParser
 import time
 import sys
 import signal

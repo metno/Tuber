@@ -10,6 +10,7 @@ from kafka import KafkaProducer, KafkaConsumer
 from kafka.errors import KafkaError
 
 import time
+import sys
 
 class KafkaAdapter(BaseAdapter):
     """
@@ -17,7 +18,11 @@ class KafkaAdapter(BaseAdapter):
     """
 
     def __init__(self, direction, bootstrap_servers, topic, **kwargs):
-        super().__init__(direction)
+        if sys.version_info.major == 3:
+            super().__init__(direction)
+        else:
+            super(KafkaAdapter, self).__init__(direction)
+
         self.topic = topic
         self.bootstrap_servers = bootstrap_servers
         self.extra_opts = kwargs
@@ -44,14 +49,14 @@ class KafkaAdapter(BaseAdapter):
                                                **self.extra_opts)
             TuberLogger.info('Connected to {}'.format(self.url))
         except KafkaError as e:
-            raise TuberIOError('Kafka error: {}'.format(e.__class__.__name__)) from e
+            raise TuberIOError('Kafka error: {}'.format(e.__class__.__name__))
 
 
     def _send(self, message):
         try:
             record = self._producer.send(self.topic, message.serialize())
         except KafkaError as e:
-            raise TuberIOError('Kafka error: {}'.format(e.__class__.__name__)) from e
+            raise TuberIOError('Kafka error: {}'.format(e.__class__.__name__))
 
 
     def receive(self):
@@ -59,4 +64,4 @@ class KafkaAdapter(BaseAdapter):
             record = self._consumer.__next__()
             return Message(record.value)
         except KafkaError as e:
-            raise TuberIOError('Kafka error: {}'.format(e.__class__.__name__)) from e
+            raise TuberIOError('Kafka error: {}'.format(e.__class__.__name__))

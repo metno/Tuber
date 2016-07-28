@@ -14,6 +14,9 @@ import time
 import re
 import string
 
+if sys.version_info.major == 2:
+    ConnectionRefusedError = OSError
+
 class TCPAdapter(BaseAdapter):
     """
     Adapter for communicating with GTS TCP sockets
@@ -24,7 +27,11 @@ class TCPAdapter(BaseAdapter):
 
 
     def __init__(self, direction, host, port):
-        super().__init__(direction)
+        if sys.version_info.major == 3:
+            super().__init__(direction)
+        else:
+            super(TCPAdapter, self).__init__(direction)
+
         self.host = host
         self.port = port
 
@@ -69,7 +76,7 @@ class TCPAdapter(BaseAdapter):
             self._socket.sendall(encoded_msg)
         except OSError as e:
             self._socket = None
-            raise TuberIOError from e
+            raise TuberIOError(e)
 
         self._csn = self._csn + 1 % pow(10, self.csn_digits)
 

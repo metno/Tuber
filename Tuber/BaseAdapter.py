@@ -8,7 +8,7 @@ import os
 
 from Tuber import TuberMessageError
 
-class BaseAdapter:
+class BaseAdapter(object):
     def __init__(self, direction):
         if direction not in ['input' , 'output']:
             raise Exception("Illegal direction {}. Must be either 'input' or 'output'".format(direction))
