@@ -10,7 +10,7 @@ class NullAdapter(BaseAdapter):
     """
 
     def __init__(self, direction): #pylint: disable=E1003
-        super().__init__(direction)
+        super().__init__(direction)  #pylint: disable=E1004
         if direction == 'input':
             TuberLogger.info('Using NullAdapter for input')
         else:

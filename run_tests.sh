@@ -9,7 +9,7 @@ UNITTEST_EXIT=$?
 echo 
 echo Running pylint
 echo
-pylint -E -i y Tuber/
+pylint -E "--msg-template={msg_id} {msg} at line {line}" Tuber/
 PYLINT_EXIT=$?
 
 if [ $UNITTEST_EXIT -eq 0 -a $PYLINT_EXIT -eq 0 ]; then

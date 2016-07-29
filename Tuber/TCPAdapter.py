@@ -28,7 +28,7 @@ class TCPAdapter(BaseAdapter):
 
     def __init__(self, direction, host, port): #pylint: disable=E1003
         if sys.version_info.major == 3:
-            super().__init__(direction)
+            super().__init__(direction) #pylint: disable=E1004
         else:
             super(TCPAdapter, self).__init__(direction)
 

@@ -6,8 +6,8 @@ from Tuber import TuberLogger
 from Tuber.Message import Message
 from Tuber import TuberIOError
 
-from kafka import KafkaProducer, KafkaConsumer
-from kafka.errors import KafkaError
+from kafka import KafkaProducer, KafkaConsumer #pylint: disable=E0401
+from kafka.errors import KafkaError #pylint: disable=E0401
 
 import time
 import sys
@@ -19,7 +19,7 @@ class KafkaAdapter(BaseAdapter):
 
     def __init__(self, direction, bootstrap_servers, topic, **kwargs): #pylint: disable=E1003
         if sys.version_info.major == 3:
-            super().__init__(direction)
+            super().__init__(direction) #pylint: disable=E1004
         else:
             super(KafkaAdapter, self).__init__(direction)
 

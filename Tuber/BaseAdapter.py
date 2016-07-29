@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from dateutil.tz import *
+from dateutil.tz import tzlocal #pylint: disable=E0401
 from datetime import datetime
 import socket
 import os
@@ -36,7 +36,7 @@ class BaseAdapter(object):
         if message.hash in self._seen_messages:
             raise TuberMessageError('Duplicate message')
 
-        dt = datetime.now(tzlocal()) #pylint: disable=E0602
+        dt = datetime.now(tzlocal())
         message.set_header('Queue-time', dt.strftime('%Y-%m-%dT%H:%M:%S.%f%z'))
 
         hostname = socket.gethostname()
