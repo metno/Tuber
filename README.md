@@ -32,7 +32,7 @@ Section names contains both a Tuber instance id (e.g. `myQueue`) and a direction
 
 The first section, `[myQueue:input]`, specifies how the Tuber instance identified as myQueue will receive messages. Here it will listen on port 16000 on all local interfaces for a TCP connection from a WMO message switch.
 
-The next section, `[myQueue:output]`, tells Tuber where it should put the messages it receives. In this case it will connect to a Kafka cluster and publish to the topic myQueue.
+The next section, `[myQueue:output]`, tells Tuber where it should put the messages it receives. In this case it will connect to a Kafka cluster using one of the servers set in `bootstrap_servers` and publish to the topic myQueue.
 
 The available configuration settings are described in one of the following sections.
 
