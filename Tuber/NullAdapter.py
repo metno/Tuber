@@ -9,7 +9,7 @@ class NullAdapter(BaseAdapter):
     messages. Useful for testing/debugging.
     """
 
-    def __init__(self, direction):
+    def __init__(self, direction): #pylint: disable=E1003
         super().__init__(direction)
         if direction == 'input':
             TuberLogger.info('Using NullAdapter for input')

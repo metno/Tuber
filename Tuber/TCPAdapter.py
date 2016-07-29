@@ -3,7 +3,7 @@
 #
 
 from Tuber import BaseAdapter
-from Tuber import TuberIOError, TuberIncompleteMessage
+from Tuber import TuberIOError, TuberIncompleteMessage, TuberMessageError
 from Tuber import TuberLogger
 from Tuber.Message import Message
 
@@ -26,7 +26,7 @@ class TCPAdapter(BaseAdapter):
     re_message_end = re.compile(br'\r\r\n\x03$')
 
 
-    def __init__(self, direction, host, port):
+    def __init__(self, direction, host, port): #pylint: disable=E1003
         if sys.version_info.major == 3:
             super().__init__(direction)
         else:
@@ -56,7 +56,7 @@ class TCPAdapter(BaseAdapter):
                 pass # try again when we have received more data from the socket
 
             # receive data from our socket and add it to our buffer
-            chunk = self._socket.recv(4096)
+            chunk = self._socket.recv(4096) #pylint: disable=E1103
             if len(chunk) == 0:
                 self._socket = None
                 raise TuberIOError('Remote host closed the connection')
@@ -73,7 +73,7 @@ class TCPAdapter(BaseAdapter):
         encoded_msg = length + b'BI' + encoded_msg
 
         try:
-            self._socket.sendall(encoded_msg)
+            self._socket.sendall(encoded_msg) #pylint: disable=E1103
         except OSError as e:
             self._socket = None
             raise TuberIOError(e)
@@ -97,9 +97,9 @@ class TCPAdapter(BaseAdapter):
                     try:
                         self.url = 'gts://{}:{}'.format(self.host, self.port)
                         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                        self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                        self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #pylint: disable=E1103
                         TuberLogger.info('Connecting to {}'.format(self.url))
-                        self._socket.connect((self.host, self.port))
+                        self._socket.connect((self.host, self.port)) #pylint: disable=E1103
                         TuberLogger.info('Connected to {}'.format(self.url))
                     except (OSError, ConnectionRefusedError) as e:
                         TuberLogger.error('Error connecting to {}: {}. retrying in 10 seconds'.format(self.url, e))

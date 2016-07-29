@@ -17,7 +17,7 @@ class KafkaAdapter(BaseAdapter):
     Adapter for communicating with Kafka brokers
     """
 
-    def __init__(self, direction, bootstrap_servers, topic, **kwargs):
+    def __init__(self, direction, bootstrap_servers, topic, **kwargs): #pylint: disable=E1003
         if sys.version_info.major == 3:
             super().__init__(direction)
         else:

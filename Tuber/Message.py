@@ -27,7 +27,7 @@ class Message:
                 raise TuberMessageError('Unable to parse header {}...'.format(line[:20]))
             self.set_header(m.group(1), m.group(2))
 
-        self.hash = hashlib.md5(self.wmobulletin).digest()
+        self.hash = hashlib.md5(self.wmobulletin).digest() #pylint: disable=E1101
 
     def set_header(self, key, value):
         self.headers[key.lower().strip()] = (key, value)
