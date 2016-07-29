@@ -1,7 +1,7 @@
 # Tuber
 Tuber transports WMO-bulletins between message systems. Currently WMO message switches as described in [WMO-No. 386](http://wis.wmo.int/file=2229) and [Kafka](http://kafka.apache.org/) is supported.
 
-There is no routing component in Tuber and all messages that are received are immediately forwarded to the destination system. The only messages that are not forwarded are those that are obviously invalid (e.g. it is a duplicate or it has no AHL).
+There is no routing done in Tuber and all messages that are received are immediately forwarded to the destination system. The only messages that are not forwarded are those that are obviously invalid (e.g. it is a duplicate or it has no AHL).
 
 Tuber will do its best to reconnect if it the connection to an endpoint is lost.
 
@@ -14,7 +14,7 @@ Tuber will do its best to reconnect if it the connection to an endpoint is lost.
 optionally: bash run_tests.sh
 
 ### Configuring
-Tuber reads its setup from a configuration file in traditional 'ini-format'. Where each endpoint is described in a separate section.
+Tuber reads its setup from a configuration file (default: `/etc/tuber.ini`) in traditional 'ini-format'. Where each endpoint is described in a separate section.
 
 A simple example is presented below.
 ```ini
@@ -37,14 +37,14 @@ The next section, `[myQueue:output]`, tells Tuber where it should put the messag
 The available configuration settings are described in one of the following sections.
 
 ### Running
-Start Tuber by running `tuber myQueue`.
+Start Tuber by running `tuber myQueue`. If the configuration file named something else than `/etc/tuber.ini`, then you will need specify its location like this `tuber myQueue -c <filename>`.
 
 Any errors encountered during startup will be printed to STDERR and syslog. Tuber will then only log to syslog.
 
 ## Configuration settings
 
 **For all connection types**
- * `type` - Specifies connection type or protocol for this connection. Valid values: `kafka`, `gts` and `null` (Which does nothing. Useful for debugging and testing).
+ * `type` - Specifies connection type or protocol for this connection. Valid values: `kafka`, `gts` and `null` (Which does nothing an is only useful for debugging and testing).
 
 **For type=gts**
   * `bind` - Address and port to listen on if this is an input endpoint.
