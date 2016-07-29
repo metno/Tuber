@@ -4,6 +4,6 @@ python:
   - "3.2"
   - "3.5"
 # command to install dependencies
-install: python setup.py install
+install: python setup.py install && pip install pylint
 # command to run tests
 script: bash run_tests.sh
