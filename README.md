@@ -37,7 +37,7 @@ The next section, `[myQueue:output]`, tells Tuber where it should put the messag
 The available configuration settings are described in one of the following sections.
 
 ### Running
-Start Tuber by running `tuber myQueue`. If the configuration file named something else than `/etc/tuber.ini`, you need specify its location like this `tuber myQueue -c <filename>`.
+Start Tuber by running `tuber myQueue`. If the configuration file named something other than `/etc/tuber.ini`, you need specify its location like this `tuber myQueue -c <filename>`.
 
 Any errors encountered during startup will be printed to STDERR and syslog. Tuber will then only log to syslog.
 
