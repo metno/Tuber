@@ -25,7 +25,7 @@ class SignalException(Exception):
                                                 (15, "SIGTERM")))
 
         if sys.version_info.major == 3:
-            super().__init__('Receivced ' + signal_names[signum])
+            super().__init__('Receivced ' + signal_names[signum]) #pylint: disable=E1004
         else:
             super(SignalException, self).__init__('Receivced ' + signal_names[signum])
         self.signum = signum
