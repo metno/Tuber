@@ -15,18 +15,24 @@ from argparse import ArgumentParser
 import time
 import sys
 import signal
+import collections
+
+class SignalException(Exception):
+    def __init__(self, signum):
+        signal_names = collections.defaultdict(lambda : "Unkown signal",
+                                               ((2, "SIGINT"),
+                                                (14, "SIGALRM"),
+                                                (15, "SIGTERM")))
+
+        if sys.version_info.major == 3:
+            super().__init__('Receivced ' + signal_names[signum])
+        else:
+            super(SignalException, self).__init__('Receivced ' + signal_names[signum])
+        self.signum = signum
 
 
-class SignalHandler():
-
-    def __init__(self):
-        self.signal_caught = False
-        signal.signal(signal.SIGINT, self.handle_signal)
-        signal.signal(signal.SIGTERM, self.handle_signal)
-
-    def handle_signal(self, signum, frame):
-        TuberLogger.info('Received signal {}'.format(signum))
-        self.signal_caught = True
+def handle_signal(signum, frame):
+    raise SignalException(signum)
 
 
 def makeAdapter(type, direction, **kwargs):
@@ -79,7 +85,9 @@ def main():
         receiver = makeAdapter(input_type, 'input', **input_conf)
 
         # deal with SIGTERM and SIGINT
-        signal_handler = SignalHandler()
+        signal.signal(signal.SIGINT, handle_signal)
+        signal.signal(signal.SIGTERM, handle_signal)
+
     except (TuberUserError, configparser.Error) as e:
         sys.stderr.write(str(e) + '\n')
         TuberLogger.error(e)
@@ -87,35 +95,40 @@ def main():
         sys.stderr.write(e.__class__.__name__ + ': ' + str(e) + '\n')
         TuberLogger.exception(e)
     else:
-        try:
-            msg = None
-            while not signal_handler.signal_caught:
-                while not msg and not signal_handler.signal_caught:
-                    try:
-                        msg = receiver.receive()
-                        TuberLogger.info('{} received from {}'.format(msg.ahl, receiver))
-                    except TuberMessageError as e:
-                        TuberLogger.error('Error processing message {}: {}'.format(msg.ahl, e))
-                        break
-                    except TuberIOError as e:
-                        TuberLogger.error('{}: retrying in 5 seconds'.format(e))
-                        time.sleep(5)
+        # start forwarding messages
+        done = False
+        msg = None
+        while True:
+            try:
+                if not msg and not done:
+                    msg = receiver.receive()
+                    TuberLogger.info('{} received from {}'.format(msg.ahl, receiver))
 
-                while msg:
-                    try:
-                        sender.send(msg)
-                        TuberLogger.info('{} delivered to {}'.format(msg.ahl, sender))
-                        msg = None
-                    except TuberMessageError as e:
-                        TuberLogger.error('Error processing message {}: {}'.format(msg.ahl, e))
-                        msg = None
-                        break
-                    except TuberIOError as e:
-                        TuberLogger.error('{}: retrying in 5 seconds'.format(e))
-                        time.sleep(5)
+                if msg:
+                    sender.send(msg)
+                    TuberLogger.info('{} delivered to {}'.format(msg.ahl, sender))
+                    msg = None
 
-        except Exception as e:
-            TuberLogger.exception(e)
-            sys.exit(1)
+                if done:
+                    break
+
+            except TuberMessageError as e:
+                TuberLogger.error("Dropping message. Reason: " + str(e))
+                msg = None
+            except TuberIOError as e:
+                TuberLogger.error('{}: retrying in 5 seconds'.format(e))
+                time.sleep(5)
+            except SignalException as e:
+                TuberLogger.info(str(e))
+                if e.signum != 14:
+                    # break out of the loop when we have sent the current msg
+                    done = True
+                    # set an alarm in case the last send() takes too long
+                    signal.alarm(1)
+                else:
+                    sys.exit(1)
+            except Exception as e:
+                TuberLogger.exception(e)
+                sys.exit(1)
 
     TuberLogger.info('Shutting down')

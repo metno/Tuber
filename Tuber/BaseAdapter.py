@@ -34,7 +34,7 @@ class BaseAdapter(object):
 
         # we should avoid sending duplicates
         if message.hash in self._seen_messages:
-            raise TuberMessageError('Duplicate message')
+            raise TuberMessageError('Duplicate message {}'.format(message.ahl))
 
         dt = datetime.now(tzlocal())
         message.set_header('Queue-time', dt.strftime('%Y-%m-%dT%H:%M:%S.%f%z'))
