@@ -49,7 +49,7 @@ class KafkaAdapter(BaseAdapter):
                                                **self.extra_opts)
             TuberLogger.info('Connected to {}'.format(self.url))
         except KafkaError as e:
-            raise TuberIOError('Kafka error: {}'.format(e.__class__.__name__))
+            raise e #TuberIOError('Kafka error: {}'.format(e.__class__.__name__))
 
 
     def _send(self, message):

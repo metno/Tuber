@@ -4,12 +4,12 @@
 
 import Tuber
 from Tuber import TuberLogger
-from Tuber import TuberMessageError, TuberIOError
+from Tuber import TuberMessageError, TuberIOError, TuberUserError
 
 try:
-    from configparser import ConfigParser
+    import Configparser as configparser
 except ImportError:
-    from ConfigParser import ConfigParser
+    import configparser
 
 from argparse import ArgumentParser
 import time
@@ -30,21 +30,25 @@ class SignalHandler():
 
 
 def makeAdapter(type, direction, **kwargs):
-    if type == 'gts':
-        if direction == 'input':
-            host, port = kwargs['bind'].split(':')
+    try:
+        if type == 'gts':
+            if direction == 'input':
+                host, port = kwargs['bind'].split(':')
+            else:
+                host, port = kwargs['connect'].split(':')
+            port = int(port)
+            return Tuber.TCPAdapter(direction, host, port)
+        elif type == 'kafka':
+            bootstrap_servers = kwargs.pop('bootstrap_servers').split(',')
+            topic = kwargs.pop('topic')
+            return Tuber.KafkaAdapter(direction, bootstrap_servers, topic, **kwargs)
+        elif type == 'null':
+            return Tuber.NullAdapter(direction)
         else:
-            host, port = kwargs['connect'].split(':')
-        port = int(port)
-        return Tuber.TCPAdapter(direction, host, port)
-    elif type == 'kafka':
-        bootstrap_servers = kwargs.pop('bootstrap_servers').split(',')
-        topic = kwargs.pop('topic')
-        return Tuber.KafkaAdapter(direction, bootstrap_servers, topic, **kwargs)
-    elif type == 'null':
-        return Tuber.NullAdapter(direction)
-    else:
-        raise ValueError('Unsupported type: {}'.format(type))
+            raise TuberUserError('Unsupported type: {}'.format(type))
+    except KeyError as e:
+        raise TuberUserError('Missing key {} in configuration file for {} {} adapter'.format(
+            str(e), type, direction))
 
 
 def main():
@@ -61,7 +65,7 @@ def main():
         args = arg_parser.parse_args()
 
         # parse config file
-        config = ConfigParser()
+        config = configparser.ConfigParser()
         config.read(args.config)
 
         output_conf = {key: value for (key, value) in config.items('{}:output'.format(args.tube))}
@@ -76,10 +80,12 @@ def main():
 
         # deal with SIGTERM and SIGINT
         signal_handler = SignalHandler()
-    except Exception as e:
-        TuberLogger.exception(e)
+    except (TuberUserError, configparser.Error) as e:
         sys.stderr.write(str(e) + '\n')
-        sys.stderr.write('Stacktrace logged\n')
+        TuberLogger.error(e)
+    except Exception as e:
+        sys.stderr.write(e.__class__.__name__ + ': ' + str(e) + '\n')
+        TuberLogger.exception(e)
     else:
         try:
             msg = None

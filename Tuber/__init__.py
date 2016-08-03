@@ -48,6 +48,12 @@ class TuberIncompleteMessage(TuberMessageError):
     """
     pass
 
+class TuberUserError(TuberException):
+    """
+    Represents an user error.
+
+    E.g. syntax error in config file
+    """
 
 from .BaseAdapter import BaseAdapter
 from .TCPAdapter import TCPAdapter
