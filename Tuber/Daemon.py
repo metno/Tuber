@@ -7,7 +7,7 @@ from Tuber import TuberLogger
 from Tuber import TuberMessageError, TuberIOError, TuberUserError
 
 try:
-    import Configparser as configparser
+    import ConfigParser as configparser
 except ImportError:
     import configparser
 
