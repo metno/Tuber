@@ -26,11 +26,8 @@ class TCPAdapter(BaseAdapter):
     re_message_end = re.compile(br'\r\r\n\x03$')
 
 
-    def __init__(self, direction, host, port): #pylint: disable=E1003
-        if sys.version_info.major == 3:
-            super().__init__(direction) #pylint: disable=E1004
-        else:
-            super(TCPAdapter, self).__init__(direction)
+    def __init__(self, direction, host, port):
+        super().__init__(direction)
 
         self.host = host
         self.port = port
