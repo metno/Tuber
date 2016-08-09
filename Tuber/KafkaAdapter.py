@@ -46,14 +46,14 @@ class KafkaAdapter(BaseAdapter):
                                                **self.extra_opts)
             TuberLogger.info('Connected to {}'.format(self.url))
         except KafkaError as e:
-            raise e #TuberIOError('Kafka error: {}'.format(e.__class__.__name__))
+            raise TuberIOError('Unable to connect to {}. Reason: {}'.format(self.url, str(e))) from e
 
 
     def _send(self, message):
         try:
             record = self._producer.send(self.topic, message.serialize())
         except KafkaError as e:
-            raise TuberIOError('Kafka error: {}'.format(e.__class__.__name__))
+            raise TuberIOError('Unable to send message to {}. Reason: {}'.format(self.url, str(e))) from e
 
 
     def receive(self):
@@ -61,4 +61,4 @@ class KafkaAdapter(BaseAdapter):
             record = self._consumer.__next__()
             return Message(record.value)
         except KafkaError as e:
-            raise TuberIOError('Kafka error: {}'.format(e.__class__.__name__))
+            raise TuberIOError('Error receiving from {}. Reson: {}'.format(self.url, str(e))) from e

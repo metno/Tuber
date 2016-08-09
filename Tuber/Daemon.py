@@ -75,9 +75,13 @@ def main():
         config.read(args.config)
 
         output_conf = {key: value for (key, value) in config.items('{}:output'.format(args.tube))}
+        if 'type' not in output_conf:
+            raise TuberUserError('Type not set in section {}:output'.format(args.tube))
         output_type = output_conf.pop('type')
 
         input_conf = {key: value for (key, value) in config.items('{}:input'.format(args.tube))}
+        if 'type' not in input_conf:
+            raise TuberUserError('Type not set in section {}:input'.format(args.tube))
         input_type = input_conf.pop('type')
 
         # create our adapters
@@ -88,7 +92,7 @@ def main():
         signal.signal(signal.SIGINT, handle_signal)
         signal.signal(signal.SIGTERM, handle_signal)
 
-    except (TuberUserError, configparser.Error) as e:
+    except (TuberIOError, TuberUserError, configparser.Error) as e:
         sys.stderr.write(str(e) + '\n')
         TuberLogger.error(e)
     except Exception as e:
