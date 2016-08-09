@@ -25,9 +25,9 @@ class KafkaAdapter(BaseAdapter):
         self.extra_opts = kwargs
 
         scheme = 'kafka'
-
         if 'sasl_plain_username' in self.extra_opts and 'sasl_plain_password' in self.extra_opts:
             self.extra_opts['sasl_mechanism'] = 'PLAIN'
+            self.extra_opts['security_protocol'] = 'SASL_SSL'
             scheme = 'kafkassl'
 
         self.url = '{}://{}/{}'.format(scheme, self.bootstrap_servers[0], self.topic)
