@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from Tuber import BaseAdapter, TuberLogger
+import time
 
 class NullAdapter(BaseAdapter):
     """
@@ -17,7 +18,8 @@ class NullAdapter(BaseAdapter):
             TuberLogger.info('Using NullAdapter for output')
 
     def receive(self):
-        return None
+        while True:
+            time.sleep(60)
 
     def send(self, message):
         pass
