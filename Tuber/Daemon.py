@@ -44,6 +44,11 @@ def makeAdapter(type, direction, **kwargs):
         elif type == 'kafka':
             bootstrap_servers = kwargs.pop('bootstrap_servers').split(',')
             topic = kwargs.pop('topic')
+
+            # convert ssl_check_hostname from string to bool (FIXME handle non string type options better)
+            if 'ssl_check_hostname' in kwargs:
+                kwargs['ssl_check_hostname'] = kwargs['ssl_check_hostname'].lower() == 'true'
+
             return Tuber.KafkaAdapter(direction, bootstrap_servers, topic, **kwargs)
         elif type == 'null':
             return Tuber.NullAdapter(direction)
