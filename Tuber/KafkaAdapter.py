@@ -4,10 +4,12 @@
 from Tuber.BaseAdapter import BaseAdapter
 from Tuber import TuberLogger
 from Tuber.Message import Message
-from Tuber import TuberIOError
+from Tuber import TuberIOError, TuberException
 
 from kafka import KafkaProducer, KafkaConsumer #pylint: disable=E0401
 from kafka.errors import KafkaError #pylint: disable=E0401
+
+from ssl import SSLError
 
 import time
 import sys
@@ -47,6 +49,8 @@ class KafkaAdapter(BaseAdapter):
             TuberLogger.info('Connected to {}'.format(self.url))
         except KafkaError as e:
             raise TuberIOError('Unable to connect to {}. Reason: {}'.format(self.url, str(e))) from e
+        except SSLError as e:
+            raise TuberException('Error creating adapter {}: {}'.format(self.url, str(e))) from e
 
 
     def _send(self, message):

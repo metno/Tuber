@@ -4,7 +4,7 @@
 
 import Tuber
 from Tuber import TuberLogger
-from Tuber import TuberMessageError, TuberIOError, TuberUserError
+from Tuber import TuberMessageError, TuberIOError, TuberUserError, TuberException
 
 try:
     import ConfigParser as configparser
@@ -94,7 +94,7 @@ def main():
         signal.signal(signal.SIGINT, handle_signal)
         signal.signal(signal.SIGTERM, handle_signal)
 
-    except (TuberIOError, TuberUserError, configparser.Error) as e:
+    except (TuberException, configparser.Error) as e:
         sys.stderr.write(str(e) + '\n')
         TuberLogger.error(e)
     except Exception as e:

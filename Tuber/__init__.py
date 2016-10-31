@@ -28,7 +28,7 @@ class TuberException(Exception):
 
 class TuberIOError(TuberException):
     """
-    Represents an error in the underlyeing data stream
+    Represents an error in the underlaying data stream
 
     E.g. unreachable remote host
     """
