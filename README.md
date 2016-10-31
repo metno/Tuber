@@ -50,6 +50,8 @@ Any errors encountered during startup will be printed to STDERR and syslog. Tube
   * `connect` - Address and port to connect to if this is an output endpoint.
 
 **For type=kafka**
-  * `bootstrap_servers` - Comma separated list of servers that can be connected to in order to retrieve metadata about the Kafka cluster.
-  * `topic` - Topic to subscribe or publish to.
-  * All other settings are passed when instantiating producer and consumer objects from [kafka-python](http://kafka-python.readthedocs.io/en/master/index.html).
+* `bootstrap_servers` - Comma separated list of servers that can be connected to in order to retrieve metadata about the Kafka cluster.
+* `topic` - Topic to subscribe or publish to.
+* `ssl_*` - same meaning as for [kafka-python](http://kafka-python.readthedocs.io/en/master/index.html)
+* `sasl_*` - same meaning as for [kafka-python](http://kafka-python.readthedocs.io/en/master/index.html)
+* `security_protocol` - same meaning as for [kafka-python](http://kafka-python.readthedocs.io/en/master/index.html)
