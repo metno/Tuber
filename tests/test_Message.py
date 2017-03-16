@@ -20,13 +20,6 @@ METAR EDDB 130020Z 36003KT CAVOK 17/11 Q1011 NOSIG=
         """
         m = Message(self.raw_message_with_headers)
 
-    def test_header(self):
-        """
-        Check if the Message object contains a 'Queue-time' header
-        """
-        m = Message(self.raw_message_with_headers)
-        m.get_header('Queue-time')
-
     def test_invalid_ahl(self):
         with self.assertRaises(TuberMessageError):
             Message(b"""# queue-time=2016-07-13T12:30:26.996266+0000

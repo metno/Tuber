@@ -37,11 +37,11 @@ class BaseAdapter(object):
             raise TuberMessageError('Duplicate message {}'.format(message.ahl))
 
         dt = datetime.now(tzlocal())
-        message.set_header('Queue-time', dt.strftime('%Y-%m-%dT%H:%M:%S.%f%z'))
+        message.add_header(dt.strftime('Queue-time: %Y-%m-%dT%H:%M:%S.%f%z'))
 
         hostname = socket.gethostname()
         pid = os.getpid()
-        message.set_header('Queued-by', 'Tuber[{}] running on {}'.format(pid, hostname))
+        message.add_header('Queued-by: Tuber[{}] running on {}'.format(pid, hostname))
 
         self._send(message)
 
