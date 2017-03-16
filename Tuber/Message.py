@@ -26,6 +26,8 @@ class Message:
             line = raw_line.strip()
             if not line: # ignore empty lines
                 continue
+            if not b'#' in line:
+                raise TuberMessageError('Expected a header, found: "{}"'.format(line))
             if re.match(rb'[#]+$', line): # ignore border lines
                 continue
             self.headers.append(line)
