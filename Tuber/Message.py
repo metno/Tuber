@@ -41,3 +41,6 @@ class Message:
     def serialize(self):
         serialized = b'\n'.join(self.headers) + b'\n'
         return  serialized + self.wmobulletin
+
+    def __repr__(self):
+        return repr(self.serialize())

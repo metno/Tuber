@@ -59,4 +59,5 @@ from .BaseAdapter import BaseAdapter
 from .TCPAdapter import TCPAdapter
 from .KafkaAdapter import KafkaAdapter
 from .NullAdapter import NullAdapter
+from .ConsoleAdapter import ConsoleAdapter
 from .Message import Message

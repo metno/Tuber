@@ -52,6 +52,8 @@ def makeAdapter(type, direction, **kwargs):
             return Tuber.KafkaAdapter(direction, bootstrap_servers, topic, **kwargs)
         elif type == 'null':
             return Tuber.NullAdapter(direction)
+        elif type == 'console':
+            return Tuber.ConsoleAdapter(direction)
         else:
             raise TuberUserError('Unsupported type: {}'.format(type))
     except KeyError as e:
