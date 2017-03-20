@@ -11,6 +11,7 @@ class ConsoleAdapter(BaseAdapter):
 
     def __init__(self, direction): #pylint: disable=E1003
         super().__init__(direction)  #pylint: disable=E1004
+        self.url = 'stdout'
 
     def receive(self):
         while True:
