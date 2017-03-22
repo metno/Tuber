@@ -34,5 +34,12 @@ SADL32 EDZO 130020\r\r
 METAR EDDB 130020Z 36003KT CAVOK 17/11 Q1011 NOSIG=
 """)
 
+    def test_missing_CR(self):
+        with self.assertRaises(TuberMessageError):
+            Message(b"""# queue-time=2016-07-13T12:30:26.996266+0000
+SADL32 EDZO
+METAR EDDB 130020Z 36003KT CAVOK 17/11 Q1011 NOSIG=
+""")
+
 if __name__ == '__main__':
     unittest.main()

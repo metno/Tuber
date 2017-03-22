@@ -9,6 +9,7 @@ from Tuber import TuberMessageError
 
 class Message:
     re_ahl = re.compile(br'[A-Z]{4}\d{2} [A-Z]{4} \d{6}( [A-Z]{3})?')
+    re_newline = re.compile(br' ?\r\r\n')
 
     def __init__(self, raw_message):
         # find ahl
@@ -31,6 +32,12 @@ class Message:
             if re.match(rb'[#]+$', line): # ignore border lines
                 continue
             self.headers.append(line)
+
+        
+        # check for proper newline directly following the ahl
+        m = self.re_newline.search(raw_message[m.end():])
+        if not m:
+            raise TuberMessageError('Expected "\\r\\r\\n" immediatly following {}'.format(self.ahl))
 
         # build md5 hash
         self.hash = hashlib.md5(self.wmobulletin).digest() #pylint: disable=E1101
