@@ -4,7 +4,7 @@
 
 import Tuber
 from Tuber import TuberLogger
-from Tuber import TuberMessageError, TuberIOError, TuberUserError, TuberException
+from Tuber import TuberMessageError, TuberIOError, TuberUserError, TuberException, TuberDuplicateMessage
 
 try:
     import ConfigParser as configparser
