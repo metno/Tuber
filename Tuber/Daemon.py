@@ -120,8 +120,11 @@ def main():
                 if done:
                     break
 
+            except TuberDuplicateMessage as e:
+                TuberLogger.warning("Dropping message: " + str(e))
+                msg = None
             except TuberMessageError as e:
-                TuberLogger.error("Dropping message. Reason: " + str(e))
+                TuberLogger.error("Dropping message: " + str(e))
                 msg = None
             except TuberIOError as e:
                 TuberLogger.error('{}: retrying in 5 seconds'.format(e))

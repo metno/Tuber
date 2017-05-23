@@ -6,7 +6,7 @@ from datetime import datetime
 import socket
 import os
 
-from Tuber import TuberMessageError
+from Tuber import TuberMessageError, TuberDuplicateMessage
 
 class BaseAdapter(object):
     def __init__(self, direction):
@@ -34,7 +34,7 @@ class BaseAdapter(object):
 
         # we should avoid sending duplicates
         if message.hash in self._seen_messages:
-            raise TuberMessageError('Duplicate message {}'.format(message.ahl))
+            raise TuberDuplicateMessage('Duplicate message {}'.format(message.ahl))
 
         dt = datetime.now(tzlocal())
         message.add_header(dt.strftime('Queue-time: %Y-%m-%dT%H:%M:%S.%f%z'))

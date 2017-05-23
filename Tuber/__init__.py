@@ -48,6 +48,11 @@ class TuberIncompleteMessage(TuberMessageError):
     """
     pass
 
+class TuberDuplicateMessage(TuberMessageError):
+    """
+    Raised when the same message is received more than once.
+    """
+
 class TuberUserError(TuberException):
     """
     Represents an user error.
