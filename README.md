@@ -6,10 +6,12 @@ Each Tuber instance is responsible for forwarding messages from a single input s
 Messages that are obviously invalid or that are duplicates are discarded. Tuber will do its best to reconnect if it the connection to an endpoint is lost.
 
 ## Getting started
-### Installing 
+### Installing on Ubuntu Xenial
+
+* sudo apt-get install python3 python3-setuptools
 * git clone https://github.com/metno/Tuber.git
 * cd Tuber
-* python setup.py install
+* python3 setup.py install
 
 optionally: bash run_tests.sh
 
@@ -43,7 +45,7 @@ Any errors encountered during startup will be printed to STDERR and syslog. Tube
 ## Configuration settings
 
 **For all connection types**
- * `type` - Specifies connection type or protocol for this connection. Valid values: `kafka`, `gts` and `null` (Which does nothing and is only useful for debugging and testing).
+ * `type` - Specifies connection type or protocol for this connection. Valid values: `kafka`, `gts`, `console`` and `null` (Which does nothing and is only useful for debugging and testing).
 
 **For type=gts**
   * `bind` - Address and port to listen on if this is an input endpoint.
@@ -55,3 +57,7 @@ Any errors encountered during startup will be printed to STDERR and syslog. Tube
 * `ssl_*` - same meaning as for [kafka-python](http://kafka-python.readthedocs.io/en/master/index.html)
 * `sasl_*` - same meaning as for [kafka-python](http://kafka-python.readthedocs.io/en/master/index.html)
 * `security_protocol` - same meaning as for [kafka-python](http://kafka-python.readthedocs.io/en/master/index.html)
+
+**For type=console**
+
+This type does not take any parameters. Only output is supported
