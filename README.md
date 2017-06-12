@@ -1,7 +1,7 @@
 # Tuber
 Tuber transports WMO-bulletins between message systems. Currently WMO message switches, as described in [WMO-No. 386](http://wis.wmo.int/file=2229), and [Kafka](http://kafka.apache.org/) is supported.
 
-Each Tuber instance is responsible for forwarding messages from a single input source to a single output destination. This means that Tuber is not a traditinal message switch, which generally has several destination endpoints and that makes a routing desicion for each message, but is more accurately described as a forwarder or an adapter. 
+Each Tuber instance is responsible for forwarding messages from a single input source to a single output destination. This means that Tuber is not a traditional message switch, which generally has several destination endpoints and that makes a routing desicion for each message, but is more accurately described as a forwarder or an adapter.
 
 Messages that are obviously invalid or that are duplicates are discarded. Tuber will do its best to reconnect if it the connection to an endpoint is lost.
 
