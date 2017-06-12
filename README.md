@@ -45,7 +45,7 @@ Any errors encountered during startup will be printed to STDERR and syslog. Tube
 ## Configuration settings
 
 **For all connection types**
- * `type` - Specifies connection type or protocol for this connection. Valid values: `kafka`, `gts`, `console`` and `null` (Which does nothing and is only useful for debugging and testing).
+ * `type` - Specifies connection type or protocol for this connection. Valid values: `kafka`, `gts`, `console` and `null` (Which does nothing and is only useful for debugging and testing).
 
 **For type=gts**
   * `bind` - Address and port to listen on if this is an input endpoint.
